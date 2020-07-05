@@ -1,0 +1,124 @@
+server:
+  port: 8082
+spring:
+  profiles: default
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        input:
+          group: taxidispatch
+          destination: tanda
+          contentType: application/json
+        output:
+          destination: tanda
+          contentType: application/json
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL57Dialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/taxidispatch?serverTimezone=UTC
+    username: ${_DATASOURCE_USERNAME}
+    password: ${_DATASOURCE_PASSWORD}
+    driverClassName: com.mysql.cj.jdbc.Driver
+api:
+  url:
+    pay: http://pay:8083
+
+feign:
+  hystrix:
+    enabled: true 
+
+---
+spring:
+  profiles: aws
+  cloud:
+    stream:
+      kafka:
+        binder: 
+          brokers: 3.34.223.233:9092
+      bindings:
+        input:
+          group: taxidispatch
+          destination: tanda
+          contentType: application/json
+        output:
+          destination: tanda
+          contentType: application/json
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update
+#      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL57Dialect
+  datasource:
+    url: jdbc:mysql://3.34.223.233:3306/db_tanda_taxi?autoReconnect=true&serverTimezone=JST&useUnicode=true&characterEncoding=UTF-8
+    username: ${_DATASOURCE_NAME_DOCKER}
+    password: ${_DATASOURCE_PASSWORD_DOCKER}
+    driverClassName: com.mysql.cj.jdbc.Driver
+
+feign:
+  hystrix:
+    enabled: true
+    
+api:
+  url:
+    pay: http://pay:8083
+
+---
+server:
+  port: 8082
+spring:
+  profiles: docker
+  cloud:
+    stream:
+      kafka:
+        binder: 
+          brokers: my-kafka.kafka.svc.cluster.local:9092
+      bindings:
+        input:
+          group: taxidispatch
+          destination: tanda
+          contentType: application/json
+        output:
+          destination: tanda
+          contentType: application/json
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update
+#      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  datasource:
+    url: jdbc:mysql://${_DATASOURCE_ADDRESS}/${_DATASOURCE_TABLESPACE}?autoReconnect=true&serverTimezone=JST&useUnicode=true&characterEncoding=UTF-8
+    username: tandataxi
+    password: tanda2020
+#    username: ${_DATASOURCE_USERNAME}
+#    userpassword: ${_DATASOURCE_PASSWORD}
+    driverClassName: com.mysql.cj.jdbc.Driver
+api:
+  url:
+    pay: http://pay:8083
+    
+feign:
+  hystrix:
+    enabled: true

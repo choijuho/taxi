@@ -1,0 +1,81 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: taxi
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      type: app
+      service: taxi
+  template:
+    metadata:
+      labels:
+        type: app
+        service: taxi
+    spec:
+      containers:
+      - name: pay
+        image: jamesby99/taxi:latest
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          timeoutSeconds: 2            
+            
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8082
+          initialDelaySeconds: 5
+          timeoutSeconds: 1                      
+            
+        env:
+        - name: _DATASOURCE_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+               name: taxi-cm
+               key: db-address
+        - name: _DATASOURCE_TABLESPACE
+          valueFrom:
+            configMapKeyRef:
+               name: taxi-cm
+               key: db-table-sapce
+        - name: _DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+               name: taxi-secret
+               key: db-user
+        - name: _DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+               name: taxi-secret
+               key: db-pw
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taxi
+spec:
+  ports:
+  - port: 8082
+    targetPort: 8082
+    protocol: TCP
+  selector:
+    type: app
+    service: taxi
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: taxi
+spec:
+  maxReplicas: 20
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: extensions/v1
+    kind: Deployment
+    name: taxi
+  targetCPUUtilizationPercentage: 50
